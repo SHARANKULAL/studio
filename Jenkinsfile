@@ -1,68 +1,75 @@
-// Jenkinsfile (Declarative Pipeline)
+
 pipeline {
-    agent any // You might specify a Node.js agent in a real setup, e.g., agent { node { nodejs 'node18' } }
+    agent any
 
     environment {
-        // Environment variables can be set here
-        // CI = 'true'
+        NODE_VERSION = '18' // Specify the Node.js version you want to use
+    }
+
+    tools {
+        nodejs "${NODE_VERSION}" // Assumes Node.js is configured in Jenkins Global Tool Configuration
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // This step assumes Jenkins checks out the code from your version control system (e.g., Git)
-                // If your Jenkins job is configured to checkout SCM, this step might just be:
-                script {
-                    echo "Code checkout typically handled by Jenkins SCM configuration."
-                    // For a self-contained example if not using SCM checkout:
-                    // git url: 'YOUR_GIT_REPOSITORY_URL', branch: 'main'
-                }
+                git branch: 'main', url: 'YOUR_GIT_REPOSITORY_URL' // Replace with your actual Git repo URL
+                // or use: checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                // Installs project dependencies using npm
                 sh 'npm install'
             }
         }
 
         stage('Lint') {
             steps {
-                // Runs the linter
                 sh 'npm run lint'
             }
         }
 
         stage('Type Check') {
             steps {
-                // Runs TypeScript type checking
                 sh 'npm run typecheck'
             }
         }
 
-        stage('Build Application') {
+        stage('Build') {
             steps {
-                // Builds the Next.js application for production
                 sh 'npm run build'
             }
         }
 
-        // Optional: Add a 'Test' stage if you have automated tests
-        // stage('Run Tests') {
+        // Optional: Add stages for testing, deployment, etc.
+        // stage('Test') {
         //     steps {
-        //         // Example: sh 'npm test'
+        //         sh 'npm test' // If you have tests configured
         //     }
         // }
 
-        // Optional: Add a 'Deploy' stage
-        // stage('Deploy') {
+        // stage('Deploy to Staging') {
+        //     when {
+        //         branch 'develop' // Example: only deploy develop branch to staging
+        //     }
         //     steps {
-        //         script {
-        //             echo "Deploying application..."
-        //             // Add your deployment commands here
-        //             // e.g., sh './deploy-script.sh'
-        //         }
+        //         // Add your deployment script/commands here
+        //         echo 'Deploying to Staging...'
+        //     }
+        // }
+
+        // stage('Deploy to Production') {
+        //     when {
+        //         branch 'main' // Example: only deploy main branch to production
+        //     }
+        //     input {
+        //         message "Deploy to Production?"
+        //         ok "Yes"
+        //     }
+        //     steps {
+        //         // Add your deployment script/commands here
+        //         echo 'Deploying to Production...'
         //     }
         // }
     }
@@ -70,16 +77,16 @@ pipeline {
     post {
         always {
             echo 'Pipeline finished.'
-            // Perform cleanup actions if necessary
+            // Clean up workspace, send notifications, etc.
             // cleanWs()
         }
         success {
-            echo 'Pipeline completed successfully!'
-            // Send success notifications, etc.
+            echo 'Pipeline succeeded!'
+            // mail to: 'team@example.com', subject: 'SUCCESS: Jenkins Pipeline ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}'
         }
         failure {
             echo 'Pipeline failed.'
-            // Send failure notifications, etc.
+            // mail to: 'team@example.com', subject: 'FAILURE: Jenkins Pipeline ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}'
         }
     }
 }
