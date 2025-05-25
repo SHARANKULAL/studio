@@ -1,0 +1,29 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: "windows-latest"
+
+steps:
+  - task: Maven@3
+    inputs: 
+      mavenPomFile: "pom.xml"
+      goals: "clean install"
+      options: "-B"
+      publishJUnitResults: true
+      testResultsFiles: "/target/surefire-reports/TEST-*.xml"
+      javaHomeOption: "JDKVersion"
+      jdkVersionOption: "1.11"
+      mavenVersionOption: "Default"
+    displayName: "Build with Maven"
+
+  - script: mvn clean install -Prun
+    displayName: "Run Node.js Application using Maven Profile 'run'"
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: "target"
+      ArtifactName: "drop"
+    displayName: "Publish Build Artifacts"
